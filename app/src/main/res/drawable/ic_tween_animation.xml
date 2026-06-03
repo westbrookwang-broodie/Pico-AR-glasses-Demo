@@ -1,0 +1,43 @@
+<!--
+  Copyright 2025 - 2026 PICO. All rights reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+  <path
+      android:pathData="M2,6C2,5.448 2.448,5 3,5H6V7H3C2.448,7 2,6.552 2,6Z"
+      android:fillColor="#000000"/>
+  <path
+      android:pathData="M2,14C2,13.448 2.448,13 3,13H10V15H3C2.448,15 2,14.552 2,14Z"
+      android:fillColor="#000000"/>
+  <path
+      android:pathData="M10,5H17C17.552,5 18,5.448 18,6C18,6.552 17.552,7 17,7H10V5Z"
+      android:fillColor="#000000"/>
+  <path
+      android:pathData="M14,13H17C17.552,13 18,13.448 18,14C18,14.552 17.552,15 17,15H14V13Z"
+      android:fillColor="#000000"/>
+  <path
+      android:pathData="M8,6m-2.25,0a2.25,2.25 0,1 1,4.5 0a2.25,2.25 0,1 1,-4.5 0"
+      android:strokeWidth="1.5"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M12,14m-2.25,0a2.25,2.25 0,1 1,4.5 0a2.25,2.25 0,1 1,-4.5 0"
+      android:strokeWidth="1.5"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+</vector>
