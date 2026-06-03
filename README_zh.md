@@ -28,25 +28,46 @@
 ## 项目结构
 
 ```txt
-app/src/main/java/com/example/spatialnav/
-├── Main.kt                         # 入口：DefaultWindowContainer + NavHost（3 个路由）
-├── platform/
-│   ├── SpatialApplication.kt       # launch(::mainApp)
-│   └── LaunchActivity.kt           # SpatialLaunchActivity
-├── ui/
-│   ├── demo/
-│   │   └── DemoScreens.kt          # 协作板 / 资料板A / 资料板B + Robot3DView + Routes
-│   └── skeletal/
-│       └── SkeletalAnimationViewModel.kt  # 持有机器人 Entity，在 onCleared 清理
-├── util/
-│   └── SkeletalAnimationUtil.kt    # 加载机器人模型、播放骨骼动画
-└── data/
-    └── AnimationModels.kt          # SkeletalAnimationState（动画片段索引）
-app/src/main/assets/
-└── pico_robot_animated.glb         # 资料板 A 中展示的 3D 模型
+animation-0.12.2/
+├── app/                                    # 空间应用模块
+│   └── src/main/
+│       ├── java/com/example/spatialnav/
+│       │   ├── Main.kt                      # 入口：DefaultWindowContainer + NavHost（3 个路由）
+│       │   ├── platform/
+│       │   │   ├── SpatialApplication.kt    # launch(::mainApp)
+│       │   │   └── LaunchActivity.kt        # SpatialLaunchActivity
+│       │   ├── ui/
+│       │   │   ├── demo/
+│       │   │   │   └── DemoScreens.kt       # 协作板 / 资料板A / 资料板B + Robot3DView + Routes
+│       │   │   └── skeletal/
+│       │   │       └── SkeletalAnimationViewModel.kt  # 持有机器人 Entity，在 onCleared 清理
+│       │   ├── util/
+│       │   │   └── SkeletalAnimationUtil.kt # 加载机器人模型、播放骨骼动画
+│       │   └── data/
+│       │       └── AnimationModels.kt       # SkeletalAnimationState（动画片段索引）
+│       └── assets/
+│           └── pico_robot_animated.glb      # 资料板 A 中展示的 3D 模型
+└── skills/                                 # 用于生成空间场景的自建 skill 目录
+    └── pico-spatial-scene-builder/
+        ├── SKILL.md                         # 构建面板的工作流与硬性约束
+        ├── agents/
+        │   └── openai.yaml                  # skill 的 UI 元数据（名称、默认提示）
+        ├── references/
+        │   ├── sdk-patterns.md              # PICO SDK API、构建/JDK 说明、编译坑
+        │   ├── ui-style.md                  # 统一调色板 / 间距 / 面板结构
+        │   └── reference-image-workflow.md  # 把上传的效果图拆解为面板与跳转
+        └── assets/
+            ├── ui-kit/
+            │   └── SpatialUiKit.kt          # 统一风格组件库（复制后改包名即用）
+            └── templates/
+                ├── SceneScreens.kt.template
+                ├── Scene3DView.kt.template
+                └── SceneNavHost.kt.template
 ```
 
-导航逻辑集中在 `Main.kt`，每个面板是 `ui/demo/DemoScreens.kt` 里的一个 Composable。3D 模型由 `SkeletalAnimationViewModel`（位于 `ui/skeletal/`）加载，其生命周期绑定到资料板 A 的返回栈条目，离开面板时自动清理模型资源。
+应用的导航逻辑集中在 `Main.kt`，每个面板是 `ui/demo/DemoScreens.kt` 里的一个 Composable。3D 模型由 `SkeletalAnimationViewModel`（位于 `ui/skeletal/`）加载，其生命周期绑定到资料板 A 的返回栈条目，离开面板时自动清理模型资源。
+
+`skills/` 目录放着自建的 `pico-spatial-scene-builder` skill，它沉淀了本项目用到的模式，便于按统一风格、据效果图、带跳转地生成新的空间场景。用法见其 `SKILL.md`。
 
 ## 环境要求
 

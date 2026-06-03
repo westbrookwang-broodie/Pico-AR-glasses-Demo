@@ -28,25 +28,46 @@ Hub ──tap note──▶ Board A ──continue──▶ Board B
 ## Project structure
 
 ```txt
-app/src/main/java/com/example/spatialnav/
-├── Main.kt                         # Entry: DefaultWindowContainer + NavHost (3 routes)
-├── platform/
-│   ├── SpatialApplication.kt       # launch(::mainApp)
-│   └── LaunchActivity.kt           # SpatialLaunchActivity
-├── ui/
-│   ├── demo/
-│   │   └── DemoScreens.kt          # Hub / Board A / Board B + Robot3DView + Routes
-│   └── skeletal/
-│       └── SkeletalAnimationViewModel.kt  # Owns the robot Entity, cleans up in onCleared
-├── util/
-│   └── SkeletalAnimationUtil.kt    # Loads the robot model, plays skeletal clips
-└── data/
-    └── AnimationModels.kt          # SkeletalAnimationState (clip indices)
-app/src/main/assets/
-└── pico_robot_animated.glb         # The 3D model shown on Board A
+animation-0.12.2/
+├── app/                                    # The spatial app module
+│   └── src/main/
+│       ├── java/com/example/spatialnav/
+│       │   ├── Main.kt                      # Entry: DefaultWindowContainer + NavHost (3 routes)
+│       │   ├── platform/
+│       │   │   ├── SpatialApplication.kt    # launch(::mainApp)
+│       │   │   └── LaunchActivity.kt        # SpatialLaunchActivity
+│       │   ├── ui/
+│       │   │   ├── demo/
+│       │   │   │   └── DemoScreens.kt       # Hub / Board A / Board B + Robot3DView + Routes
+│       │   │   └── skeletal/
+│       │   │       └── SkeletalAnimationViewModel.kt  # Owns the robot Entity, cleans up in onCleared
+│       │   ├── util/
+│       │   │   └── SkeletalAnimationUtil.kt # Loads the robot model, plays skeletal clips
+│       │   └── data/
+│       │       └── AnimationModels.kt       # SkeletalAnimationState (clip indices)
+│       └── assets/
+│           └── pico_robot_animated.glb      # The 3D model shown on Board A
+└── skills/                                 # Authoring skill for generating spatial scenes
+    └── pico-spatial-scene-builder/
+        ├── SKILL.md                         # Workflow + hard constraints for building panels
+        ├── agents/
+        │   └── openai.yaml                  # UI metadata (display name, prompt)
+        ├── references/
+        │   ├── sdk-patterns.md              # PICO SDK APIs, build/JDK notes, compile pitfalls
+        │   ├── ui-style.md                  # Unified palette / spacing / panel layout
+        │   └── reference-image-workflow.md  # Turn an uploaded mockup into panels + routes
+        └── assets/
+            ├── ui-kit/
+            │   └── SpatialUiKit.kt          # Shared style components (copy + rename package)
+            └── templates/
+                ├── SceneScreens.kt.template
+                ├── Scene3DView.kt.template
+                └── SceneNavHost.kt.template
 ```
 
-The navigation lives in `Main.kt`; each panel is a Composable in `ui/demo/DemoScreens.kt`. The 3D model is loaded by `SkeletalAnimationViewModel` (in `ui/skeletal/`), which is scoped to Board A's back stack entry, so leaving the panel cleans up the model automatically.
+The app's navigation lives in `Main.kt`; each panel is a Composable in `ui/demo/DemoScreens.kt`. The 3D model is loaded by `SkeletalAnimationViewModel` (in `ui/skeletal/`), which is scoped to Board A's back stack entry, so leaving the panel cleans up the model automatically.
+
+The `skills/` folder holds an authoring skill, `pico-spatial-scene-builder`, that captures the patterns used here so new spatial scenes can be generated with consistent style, image-driven layout, and navigation wiring. See its `SKILL.md` for the workflow.
 
 ## Requirements
 
