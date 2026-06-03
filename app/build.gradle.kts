@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pico.spatial.sample.animation"
+    namespace = "com.example.spatialnav"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.pico.spatial.sample.animation"
+        applicationId = "com.example.spatialnav"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

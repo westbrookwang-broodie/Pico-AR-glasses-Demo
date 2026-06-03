@@ -15,17 +15,6 @@
   limitations under the License.
 -->
 <resources>
-    <color name="menu_toggle_active">#EBEBEB</color>
-    <color name="menu_toggle_inactive">#DCD8D5</color>
-    <color name="main_bg">#B8B3AF</color>
-    <color name="bot_anim_selected">#9C9A92</color>
-    <color name="tween_target_selected">#ACA6A2</color>
-    <color name="widget_bg">#C9C6C3</color>
-    <color name="widget_button_active">#DDDAD5</color>
-    <color name="widget_button_inactive">#BDBCB9</color>
-    <color name="widget_slider_progress">#DFDDDA</color>
-    <color name="widget_text_inactive">#585553</color>
-
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

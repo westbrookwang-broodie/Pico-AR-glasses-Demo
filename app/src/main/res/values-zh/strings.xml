@@ -15,11 +15,5 @@
   limitations under the License.
 -->
 <resources>
-    <string name="app_name">动画</string>
-    <string name="dropdown_menu">下拉菜单</string>
-    <string name="standby_mode">待机模式</string>
-    <string name="spin_leap">旋转跳跃</string>
-    <string name="curious_look">好奇张望</string>
-    <string name="turbo_dash">涡轮冲刺</string>
-    <string name="hello_wave">挥手问好</string>
+    <string name="app_name">空间导航示例</string>
 </resources>
