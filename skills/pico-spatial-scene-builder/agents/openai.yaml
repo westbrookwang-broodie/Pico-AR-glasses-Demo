@@ -1,0 +1,4 @@
+interface:
+  display_name: "PICO Spatial Scene Builder"
+  short_description: "Build PICO Spatial 3D scene views with navigation"
+  default_prompt: "帮我用 PICO Spatial SDK 创建一组可跳转的 3D 场景界面"

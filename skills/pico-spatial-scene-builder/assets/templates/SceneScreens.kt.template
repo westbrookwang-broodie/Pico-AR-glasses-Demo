@@ -1,0 +1,105 @@
+/*
+ * Scene panels template. Copy into the app's UI package, drop the .template suffix,
+ * change `package`, then adapt panels/routes to the user's panel list & navigation table.
+ *
+ * Depends on SpatialUiKit.kt (PanelScaffold / SpatialPanelButton / StickyNote / SpatialPalette).
+ * Every visual element uses com.pico.spatial.ui.*; layout/state use standard androidx.compose.*.
+ */
+package com.example.app.ui.scene
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.pico.spatial.ui.design.Text
+import com.pico.spatial.ui.foundation.material.backgroundMaterial
+import com.pico.spatial.ui.platform.Material
+
+/** Route names — one per panel. Keep in sync with the navigation table. */
+object Routes {
+    const val HUB = "hub"
+    const val BOARD_A = "board_a"
+    const val BOARD_B = "board_b"
+}
+
+/* ---- Panel 1: Hub (sticky-note collaboration board) ---- */
+@Composable
+fun HubScreen(onOpenBoard: () -> Unit) {
+    Column(modifier = Modifier.fillMaxSize().padding(40.dp)) {
+        Text(
+            text = "协作板",
+            fontSize = 30.sp,
+            fontWeight = FontWeight.W700,
+            lineHeight = 38.sp,
+            color = SpatialPalette.TextDark
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(text = "点击任意便签进入资料板", fontSize = 16.sp, color = SpatialPalette.TextGray)
+        Spacer(Modifier.height(40.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            StickyNote("共识点", SpatialPalette.NoteBlue, onOpenBoard)
+            StickyNote("疑问点", SpatialPalette.NotePink, onOpenBoard)
+            StickyNote("新提议", SpatialPalette.NoteGreen, onOpenBoard)
+        }
+        Spacer(Modifier.height(40.dp))
+        Box(
+            modifier =
+                Modifier.clip(RoundedCornerShape(20.dp))
+                    .backgroundMaterial(style = Material.Thin)
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
+        ) {
+            Text(text = "● 多人协作中  3人在线", fontSize = 14.sp, color = SpatialPalette.TextGray)
+        }
+    }
+}
+
+/* ---- Panel 2: Board A (text + embedded 3D model + forward/close) ---- */
+@Composable
+fun BoardAScreen(onNext: () -> Unit, onClose: () -> Unit) {
+    PanelScaffold(title = "A 资料板", onClose = onClose) {
+        Text(text = "具身智能发展综述", fontSize = 22.sp, fontWeight = FontWeight.W600, color = SpatialPalette.TextDark)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "当前具身智能在环境理解上取得突破……",
+            fontSize = 15.sp,
+            lineHeight = 22.sp,
+            color = SpatialPalette.TextGray
+        )
+        Spacer(Modifier.height(16.dp))
+        Scene3DView() // from Scene3DView.kt.template
+        Spacer(Modifier.height(20.dp))
+        SpatialPanelButton(text = "继续学习 →", onClick = onNext)
+    }
+}
+
+/* ---- Panel 3: Board B (text only + close) ---- */
+@Composable
+fun BoardBScreen(onClose: () -> Unit) {
+    PanelScaffold(title = "B 资料板", onClose = onClose) {
+        Text(text = "空间计算的未来", fontSize = 22.sp, fontWeight = FontWeight.W600, color = SpatialPalette.TextDark)
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "空间计算将重塑人机交互范式……",
+            fontSize = 15.sp,
+            lineHeight = 22.sp,
+            color = SpatialPalette.TextGray
+        )
+        Spacer(Modifier.height(20.dp))
+        SpatialPanelButton(text = "✕ 关闭，返回协作板", onClick = onClose)
+    }
+}

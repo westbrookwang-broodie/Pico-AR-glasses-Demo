@@ -1,0 +1,62 @@
+/*
+ * Embedded 3D model view + its ViewModel. Copy into the app's UI package, drop .template,
+ * change `package`, and set MODEL_ASSET to your model file in app/src/main/assets/.
+ *
+ * The Entity lives in the ViewModel; leaving the panel destroys the back stack entry's
+ * ViewModel, so onCleared() releases the model automatically (no leak).
+ */
+package com.example.app.ui.scene
+
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.TransformComponent
+import com.pico.spatial.core.math.Vector3
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.foundation.layout.requiredDepth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+private const val MODEL_ASSET = "asset://your_model.glb"
+private val INITIAL_POSITION = Vector3(-0.07f, -0.2f, 0.1f)
+private val INITIAL_SCALE = Vector3(0.0045f)
+
+/** Renders the model inside a SpatialView. requiredDepth gives the 3D content Z-axis room. */
+@Composable
+fun Scene3DView(viewModel: Scene3DViewModel = viewModel()) {
+    LaunchedEffect(Unit) { viewModel.entity.enabled = true }
+    SpatialView(
+        modifier = Modifier.height(280.dp).fillMaxWidth().requiredDepth(100.dp),
+        initial = { content, _ -> content.addEntity(viewModel.entity) }
+    )
+}
+
+/** Owns the Entity; loads the model off the main thread; cleans up in onCleared. */
+class Scene3DViewModel : ViewModel() {
+    val entity = Entity()
+
+    init {
+        viewModelScope.launch {
+            val model = withContext(Dispatchers.IO) { Entity.load(MODEL_ASSET) }
+            entity.addChild(model)
+            model.components[TransformComponent::class.java]?.apply {
+                setPosition(INITIAL_POSITION)
+                setScaleVector(INITIAL_SCALE)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        entity.stopAllAnimations()
+        // If you hold AnimationResource handles, close them here.
+    }
+}
