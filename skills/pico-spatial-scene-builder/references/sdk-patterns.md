@@ -1,3 +1,4 @@
+
 # PICO Spatial SDK 关键模式参考
 
 适用版本：PICO Spatial SDK 0.12.x（PICO OS 6）。所有结论以工程实际依赖为准（`com.pico.spatial:bom`）。

@@ -19,36 +19,54 @@ import androidx.compose.foundation.layout.Box
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.spatialnav.ui.demo.BoardAScreen
-import com.example.spatialnav.ui.demo.BoardBScreen
-import com.example.spatialnav.ui.demo.HubScreen
-import com.example.spatialnav.ui.demo.Routes
+import com.example.spatialnav.ui.scene.CardADetailScreen
+import com.example.spatialnav.ui.scene.CardBDetailScreen
+import com.example.spatialnav.ui.scene.CardCDetailScreen
+import com.example.spatialnav.ui.scene.Routes
+import com.example.spatialnav.ui.scene.WorkspaceScreen
 import com.pico.spatial.ui.design.PicoTheme
 import com.pico.spatial.ui.foundation.dsl.DefaultWindowContainer
 import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
 
+/**
+ * Spatial entry point for the "抬头共振" (Heads-up Resonance) scene, recreated from the demo HTML.
+ *
+ * Navigation:
+ * - WORKSPACE: main stage (title + three knowledge cards + focus board + toolbar)
+ * - CARD_A/B/C: per-card detail panels; CARD_A embeds the animated 3D robot
+ * - each detail closes back to WORKSPACE
+ */
 fun mainApp(scope: SpatialAppScope) =
     with(scope) {
         DefaultWindowContainer {
             PicoTheme {
                 Box {
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = Routes.HUB) {
-                        // 协作板：点便签 → 资料板 A
-                        composable(Routes.HUB) {
-                            HubScreen(onOpenBoard = { navController.navigate(Routes.BOARD_A) })
-                        }
-                        // 资料板 A：继续学习 → 资料板 B；✕ → 返回协作板
-                        composable(Routes.BOARD_A) {
-                            BoardAScreen(
-                                onNext = { navController.navigate(Routes.BOARD_B) },
-                                onClose = { navController.popBackStack(Routes.HUB, false) }
+                    NavHost(navController = navController, startDestination = Routes.WORKSPACE) {
+                        composable(Routes.WORKSPACE) {
+                            WorkspaceScreen(
+                                onOpenCard = { id ->
+                                    when (id) {
+                                        "B" -> navController.navigate(Routes.CARD_B)
+                                        "C" -> navController.navigate(Routes.CARD_C)
+                                        else -> navController.navigate(Routes.CARD_A)
+                                    }
+                                }
                             )
                         }
-                        // 资料板 B：✕ → 返回协作板
-                        composable(Routes.BOARD_B) {
-                            BoardBScreen(
-                                onClose = { navController.popBackStack(Routes.HUB, false) }
+                        composable(Routes.CARD_A) {
+                            CardADetailScreen(
+                                onClose = { navController.popBackStack(Routes.WORKSPACE, false) }
+                            )
+                        }
+                        composable(Routes.CARD_B) {
+                            CardBDetailScreen(
+                                onClose = { navController.popBackStack(Routes.WORKSPACE, false) }
+                            )
+                        }
+                        composable(Routes.CARD_C) {
+                            CardCDetailScreen(
+                                onClose = { navController.popBackStack(Routes.WORKSPACE, false) }
                             )
                         }
                     }

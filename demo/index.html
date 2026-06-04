@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>抬头共振 · 交互演示</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="stage" aria-label="抬头共振交互演示">
+      <img class="ambient-image" src="./assets/studio-ambient.svg" alt="" aria-hidden="true">
+      <div class="ambient-vignette" aria-hidden="true"></div>
+
+      <section class="workspace" data-testid="workspace">
+        <svg class="link-layer" aria-hidden="true">
+          <defs>
+            <filter id="linkGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <line data-link="b-a"/>
+          <line data-link="a-c"/>
+          <line data-link="a-board"/>
+          <circle data-dot="b"/>
+          <circle data-dot="a-left"/>
+          <circle data-dot="a-right"/>
+          <circle data-dot="c"/>
+          <circle data-dot="a-bottom"/>
+          <circle data-dot="board"/>
+        </svg>
+
+        <header class="title-block">
+          <p class="step">2. 抬头共振</p>
+          <p class="subline">共同关注形成 · <span data-presence-count>3</span> 人在场</p>
+        </header>
+
+        <button class="presence-chip" type="button" data-action="presence" aria-label="查看在场成员">
+          <span class="avatar-stack" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span><span data-presence-count>3</span> 人在场</span>
+        </button>
+
+        <article class="knowledge-card side-card left-card" data-card="B" tabindex="0">
+          <div class="card-head">
+            <div class="card-kicker"><span class="tag tag-green">B</span><span>案例补充</span></div>
+            <div class="card-controls">
+              <button class="card-control" type="button" data-action="open-card" data-topic="B" aria-label="打开 B 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path d="M10 10 3 3M14 10l7-7M10 14l-7 7M14 14l7 7"/></svg>
+              </button>
+              <button class="card-control" type="button" data-action="hide-card" data-topic="B" aria-label="隐藏 B 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c5 0 9 5 10 8a15.4 15.4 0 0 1-2.1 3.6"/><path d="M6.6 6.7A15 15 0 0 0 2 12c1 3 5 8 10 8a10.8 10.8 0 0 0 4.2-.9"/></svg>
+              </button>
+            </div>
+          </div>
+          <h2>空间计算的未来</h2>
+          <p class="relation">与 A 的关系：</p>
+          <p>空间计算可作为具身智能的应用场景。</p>
+          <div class="card-expanded">
+            <p>可补充的场景：空间标注、物体定位、多人协作决策。</p>
+            <p>案例价值：让模型的空间理解能力进入可验证场景。</p>
+          </div>
+          <button class="soft-button" type="button" data-action="add-context" data-topic="B">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 2-5a8 8 0 1 1 16-6Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+            </span>
+            添加到对话
+          </button>
+        </article>
+
+        <article class="knowledge-card main-card is-active" data-card="A" tabindex="0">
+          <div class="main-card-top">
+            <div class="card-kicker"><span class="tag tag-blue">A</span><span>关键词洞察</span></div>
+            <div class="card-controls">
+              <button class="card-control" type="button" data-action="open-card" data-topic="A" aria-label="打开 A 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path d="M10 10 3 3M14 10l7-7M10 14l-7 7M14 14l7 7"/></svg>
+              </button>
+              <button class="card-control" type="button" data-action="hide-card" data-topic="A" aria-label="隐藏 A 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c5 0 9 5 10 8a15.4 15.4 0 0 1-2.1 3.6"/><path d="M6.6 6.7A15 15 0 0 0 2 12c1 3 5 8 10 8a10.8 10.8 0 0 0 4.2-.9"/></svg>
+              </button>
+            </div>
+          </div>
+          <h1>具身智能发展综述</h1>
+          <p class="focus-label">A 当前关注：</p>
+          <p class="main-copy" data-main-copy>视觉、语言与动作模型结合后，机器从 “执行工具” 转向 “环境理解者”。</p>
+          <div class="card-expanded">
+            <p>核心判断：具身智能的关键不只是执行动作，而是理解环境反馈。</p>
+            <p>讨论焦点：模型如何从感知输入转成可行动的空间决策。</p>
+          </div>
+          <div class="card-actions">
+            <button class="primary-button" type="button" data-action="bring-focus" data-topic="A">
+              <span class="play-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7Z"/></svg>
+              </span>
+              带入讨论
+            </button>
+            <span class="live-pill" data-flow-label>等待共同关注</span>
+          </div>
+        </article>
+
+        <article class="knowledge-card side-card right-card" data-card="C" tabindex="0">
+          <div class="card-head">
+            <div class="card-kicker"><span class="tag tag-purple">C</span><span>趋势延展</span></div>
+            <div class="card-controls">
+              <button class="card-control" type="button" data-action="open-card" data-topic="C" aria-label="打开 C 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path d="M10 10 3 3M14 10l7-7M10 14l-7 7M14 14l7 7"/></svg>
+              </button>
+              <button class="card-control" type="button" data-action="hide-card" data-topic="C" aria-label="隐藏 C 卡">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c5 0 9 5 10 8a15.4 15.4 0 0 1-2.1 3.6"/><path d="M6.6 6.7A15 15 0 0 0 2 12c1 3 5 8 10 8a10.8 10.8 0 0 0 4.2-.9"/></svg>
+              </button>
+            </div>
+          </div>
+          <h2>人与空间的协同</h2>
+          <p class="relation">与 A 的关系：</p>
+          <p>人机交互将从屏幕转向空间理解。</p>
+          <div class="card-expanded">
+            <p>可延展的趋势：空间理解、意图预测、协同反馈。</p>
+            <p>趋势价值：从单点指令转向人与环境共同塑造任务。</p>
+          </div>
+          <button class="soft-button" type="button" data-action="add-context" data-topic="C">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 2-5a8 8 0 1 1 16-6Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+            </span>
+            添加到对话
+          </button>
+        </article>
+
+        <section class="focus-board" aria-label="关注点画布">
+          <svg class="board-links" aria-hidden="true"></svg>
+          <header class="board-head">
+            <button class="board-tab is-current" type="button" data-tab="map">
+              <span class="mini-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16M6 6h.01M18 18h.01"/></svg>
+              </span>
+              关注点画布
+            </button>
+            <button class="board-tab" type="button" data-tab="whiteboard">
+              <span class="mini-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 4h7l4 4v12H7z"/><path d="M14 4v5h5"/></svg>
+              </span>
+              白板笔记点
+            </button>
+            <button class="board-tab" type="button" data-tab="summary">
+              <span class="mini-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 19.5V6a2 2 0 0 1 2-2h7v17H6a2 2 0 0 0-2 2"/><path d="M20 19.5V6a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2"/></svg>
+              </span>
+              笔记和概
+            </button>
+            <time data-clock>12:06 · K</time>
+          </header>
+
+          <button class="note note-blue" type="button" data-node="common" style="left: 17%; top: 41%;">
+            <span class="pin"></span><span>共识点</span>
+          </button>
+          <button class="note note-pink is-selected" type="button" data-node="question" style="left: 47%; top: 55%;">
+            <span class="pin"></span><span>疑问点</span>
+          </button>
+          <button class="note note-green" type="button" data-node="new" style="left: 76%; top: 41%;">
+            <span class="pin"></span><span>新观点</span>
+          </button>
+        </section>
+
+        <nav class="toolbar" aria-label="演示工具栏">
+          <button class="tool-button" type="button" data-mode="select" aria-label="选择">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3l9 17 2-7 7-2Z"/></svg>
+            <span>选择</span>
+          </button>
+          <button class="tool-button" type="button" data-mode="annotate" aria-label="标注">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span>标注</span>
+          </button>
+          <button class="tool-button is-active" type="button" data-mode="connect" aria-label="连接">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7H6a2 2 0 0 0-2 2v3"/><path d="M15 7h3a2 2 0 0 1 2 2v3"/><path d="M9 17H6a2 2 0 0 1-2-2v-3"/><path d="M15 17h3a2 2 0 0 0 2-2v-3"/></svg>
+            <span>连接</span>
+          </button>
+          <button class="tool-button" type="button" data-mode="voice" aria-label="语音">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            <span>语音</span>
+          </button>
+          <button class="tool-button" type="button" data-mode="more" aria-label="更多">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>
+            <span>更多</span>
+          </button>
+        </nav>
+
+        <aside class="bottom-status" aria-live="polite">
+          <span class="status-dot"></span>
+          <span data-status-text>多人协作中 · <span data-presence-count>3</span> 人在场</span>
+        </aside>
+
+        <div class="card-dock" data-card-dock aria-label="隐藏的卡片"></div>
+
+        <div class="popover" data-popover="presence" hidden>
+          <p class="popover-title">在场成员</p>
+          <button type="button" data-toggle-person="林">林 · 产品</button>
+          <button type="button" data-toggle-person="K">K · 研究</button>
+          <button type="button" data-toggle-person="周">周 · 交互</button>
+          <button type="button" data-toggle-person="陈">陈 · 观察</button>
+        </div>
+
+        <div class="popover more-popover" data-popover="more" hidden>
+          <button type="button" data-action="collapse-card">收起打开卡片</button>
+          <button type="button" data-action="new-note">新增观点卡</button>
+          <button type="button" data-action="reset-demo">重置演示</button>
+          <button type="button" data-action="make-summary">生成共振摘要</button>
+        </div>
+
+        <div class="toast" data-toast role="status" aria-live="polite"></div>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>

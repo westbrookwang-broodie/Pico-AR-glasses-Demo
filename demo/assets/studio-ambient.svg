@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1000" role="img" aria-label="warm studio workspace background">
+  <defs>
+    <linearGradient id="wall" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#43392f"/>
+      <stop offset=".45" stop-color="#716355"/>
+      <stop offset="1" stop-color="#bda98e"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#2d2b27"/>
+      <stop offset=".5" stop-color="#75634d"/>
+      <stop offset="1" stop-color="#c8ae83"/>
+    </linearGradient>
+    <linearGradient id="windowGlow" x1="0" x2="1">
+      <stop offset="0" stop-color="#dde6ed"/>
+      <stop offset=".5" stop-color="#c2d5db"/>
+      <stop offset="1" stop-color="#fbdd9d"/>
+    </linearGradient>
+    <filter id="soft">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="heavy">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+  </defs>
+
+  <rect width="1800" height="1000" fill="url(#wall)"/>
+  <path d="M0 660 L1800 590 L1800 1000 L0 1000 Z" fill="url(#floor)"/>
+  <path d="M0 0 H1800 V190 C1380 110 930 110 520 165 C310 192 150 214 0 195 Z" fill="#302a25" opacity=".55"/>
+
+  <g opacity=".34" stroke="#e0d0b6" stroke-width="5" filter="url(#soft)">
+    <path d="M190 0 L500 660"/>
+    <path d="M1010 0 L1180 620"/>
+    <path d="M1530 0 L1375 610"/>
+    <path d="M0 212 C370 280 930 238 1800 175"/>
+  </g>
+
+  <g transform="translate(1225 176)" filter="url(#soft)">
+    <rect x="0" y="0" width="515" height="390" rx="12" fill="url(#windowGlow)" opacity=".85"/>
+    <rect x="24" y="28" width="142" height="330" fill="#dceef6" opacity=".55"/>
+    <rect x="187" y="28" width="142" height="330" fill="#cce3ee" opacity=".62"/>
+    <rect x="350" y="28" width="122" height="330" fill="#ffe0a3" opacity=".5"/>
+    <path d="M18 352 C120 230 214 275 292 180 C340 118 404 130 496 66 L496 390 L18 390 Z" fill="#7fa06c" opacity=".35"/>
+    <g stroke="#78694f" stroke-width="10" opacity=".38">
+      <path d="M178 0 V390"/>
+      <path d="M340 0 V390"/>
+      <path d="M0 194 H515"/>
+    </g>
+  </g>
+
+  <g filter="url(#heavy)" opacity=".65">
+    <rect x="86" y="365" width="310" height="125" rx="16" fill="#2c2923"/>
+    <rect x="120" y="415" width="250" height="94" rx="12" fill="#6e533d"/>
+    <rect x="216" y="290" width="46" height="126" rx="18" fill="#4d633d"/>
+    <circle cx="238" cy="286" r="54" fill="#526f44"/>
+    <circle cx="174" cy="318" r="37" fill="#425a39"/>
+    <circle cx="287" cy="330" r="46" fill="#6d7d4a"/>
+  </g>
+
+  <g filter="url(#heavy)" opacity=".7">
+    <rect x="1365" y="568" width="210" height="32" rx="9" fill="#6a4d31"/>
+    <rect x="1395" y="520" width="145" height="48" rx="11" fill="#8a6947"/>
+    <path d="M1404 598 L1378 735 M1532 598 L1562 735" stroke="#3b2d22" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#heavy)" opacity=".8">
+    <rect x="1595" y="710" width="92" height="98" rx="22" fill="#8a735d"/>
+    <path d="M1645 708 C1600 650 1606 600 1648 548 C1685 602 1695 652 1645 708 Z" fill="#6e8a4f"/>
+    <path d="M1638 705 C1580 678 1560 622 1588 566 C1642 620 1665 665 1638 705 Z" fill="#597645"/>
+  </g>
+
+  <path d="M1110 694 C1235 683 1380 720 1538 760 C1390 850 1100 835 920 770 Z" fill="#f0c27b" opacity=".26" filter="url(#soft)"/>
+  <path d="M76 766 C300 658 520 724 710 796 C498 910 228 903 56 842 Z" fill="#e5c087" opacity=".18" filter="url(#soft)"/>
+  <rect width="1800" height="1000" fill="#15120f" opacity=".22"/>
+</svg>
