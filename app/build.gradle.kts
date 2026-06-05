@@ -1,3 +1,6 @@
+import com.android.build.gradle.ProguardFiles.getDefaultProguardFile
+import org.jetbrains.kotlin.builtins.StandardNames.FqNames.target
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,7 +13,6 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.spatialnav"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,44 +48,78 @@ import com.pico.spatial.ui.foundation.hover.spatialHoverEffect
 import com.pico.spatial.ui.foundation.material.backgroundMaterial
 import com.pico.spatial.ui.platform.Material
 
+/** A member that can be present in the session (name + role). */
+data class Member(val name: String, val role: String)
+
+private val ALL_MEMBERS =
+    listOf(
+        Member("林", "产品"),
+        Member("K", "研究"),
+        Member("周", "交互"),
+        Member("陈", "观察")
+    )
+
 /**
  * Main spatial workspace, mirroring the demo HTML "抬头共振" stage:
  * - top-left title block + step
- * - top-right presence chip
+ * - top-right presence chip (tap to expand/collapse the member list; toggle members in/out)
  * - three knowledge cards (B left · A center/active · C right)
  * - the "关注点画布" focus board with sticky notes & tabs
  * - bottom tool bar + collaboration status
  *
- * Interaction is kept light: tapping a card opens its detail screen; toolbar/tabs/notes give local
- * selection feedback only (full demo logic is intentionally not ported).
+ * Presence state is hoisted here so the header, chip and bottom status all reflect the live count.
  */
 @Composable
 fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
-        HeaderRow()
-        Spacer(Modifier.height(20.dp))
-        // Three knowledge cards.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SideCard(SceneData.cardB, Modifier.weight(1f)) { onOpenCard("B") }
-            Connector()
-            MainCard(SceneData.cardA, Modifier.weight(1.3f)) { onOpenCard("A") }
-            Connector()
-            SideCard(SceneData.cardC, Modifier.weight(1f)) { onOpenCard("C") }
+    // Live presence: who is currently in the session, and whether the member list is expanded.
+    val present = remember { mutableStateListOf("林", "K", "周") }
+    var presenceExpanded by remember { mutableStateOf(false) }
+    val count = present.size
+
+    val togglePerson: (String) -> Unit = { name ->
+        if (present.contains(name)) {
+            if (present.size > 1) present.remove(name) // keep at least one person in the room
+        } else {
+            present.add(name)
         }
-        Spacer(Modifier.height(20.dp))
-        FocusBoard()
-        Spacer(Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Toolbar()
-            Spacer(Modifier.weight(1f))
-            StatusChip()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
+            HeaderRow(
+                count = count,
+                expanded = presenceExpanded,
+                onToggleExpanded = { presenceExpanded = !presenceExpanded }
+            )
+            Spacer(Modifier.height(20.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SideCard(SceneData.cardB, Modifier.weight(1f)) { onOpenCard("B") }
+                Connector()
+                MainCard(SceneData.cardA, Modifier.weight(1.3f)) { onOpenCard("A") }
+                Connector()
+                SideCard(SceneData.cardC, Modifier.weight(1f)) { onOpenCard("C") }
+            }
+            Spacer(Modifier.height(20.dp))
+            FocusBoard()
+            Spacer(Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Toolbar()
+                Spacer(Modifier.weight(1f))
+                StatusChip(count)
+            }
+        }
+
+        // Presence popover floats over the stage, anchored under the top-right chip.
+        if (presenceExpanded) {
+            PresencePopover(
+                present = present,
+                onToggle = togglePerson,
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 84.dp, end = 28.dp)
+            )
         }
     }
 }
@@ -93,24 +127,30 @@ fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
 /* ----------------------------- 顶部：标题 + 在场 ----------------------------- */
 
 @Composable
-private fun HeaderRow() {
+private fun HeaderRow(count: Int, expanded: Boolean, onToggleExpanded: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column {
-            Text(text = "2. 抬头共振", fontSize = 26.sp, fontWeight = FontWeight.W800, color = Palette.TextDark)
+            Text(
+                text = "2. 抬头共振",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.W800,
+                color = Palette.TextDark
+            )
             Spacer(Modifier.height(4.dp))
-            Text(text = "共同关注形成 · 3 人在场", fontSize = 14.sp, color = Palette.TextGray)
+            Text(text = "共同关注形成 · $count 人在场", fontSize = 14.sp, color = Palette.TextGray)
         }
         Spacer(Modifier.weight(1f))
-        PresenceChip()
+        PresenceChip(count = count, expanded = expanded, onClick = onToggleExpanded)
     }
 }
 
 @Composable
-private fun PresenceChip() {
+private fun PresenceChip(count: Int, expanded: Boolean, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.clip(RoundedCornerShape(22.dp))
                 .backgroundMaterial(style = Material.Thin)
+                .clickable { onClick() }
                 .spatialHoverEffect()
                 .padding(horizontal = 16.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -121,7 +161,62 @@ private fun PresenceChip() {
                 Box(modifier = Modifier.size(20.dp).clip(CircleShape).background(c))
             }
         }
-        Text(text = "3 人在场", fontSize = 13.sp, color = Palette.TextDark)
+        Text(text = "$count 人在场", fontSize = 13.sp, color = Palette.TextDark)
+        Text(text = if (expanded) "▴" else "▾", fontSize = 12.sp, color = Palette.TextGray)
+    }
+}
+
+/** Expanded member list. Each row toggles a person in/out of the session. */
+@Composable
+private fun PresencePopover(
+    present: List<String>,
+    onToggle: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier =
+            modifier
+                .width(200.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .backgroundMaterial(style = Material.Thick)
+                .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(text = "在场成员", fontSize = 13.sp, fontWeight = FontWeight.W700, color = Palette.TextGray)
+        ALL_MEMBERS.forEach { member ->
+            val on = present.contains(member.name)
+            PersonRow(member = member, on = on) { onToggle(member.name) }
+        }
+    }
+}
+
+@Composable
+private fun PersonRow(member: Member, on: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .then(if (on) Modifier.background(Palette.NoteGreen) else Modifier)
+                .clickable { onClick() }
+                .spatialHoverEffect()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Box(
+            modifier =
+                Modifier.size(8.dp)
+                    .clip(CircleShape)
+                    .background(if (on) Palette.Online else Palette.TextFaint)
+        )
+        Text(
+            text = "${member.name} · ${member.role}",
+            fontSize = 13.sp,
+            fontWeight = if (on) FontWeight.W600 else FontWeight.W400,
+            color = if (on) Palette.TextDark else Palette.TextGray,
+            modifier = Modifier.weight(1f)
+        )
+        Text(text = if (on) "在场" else "暂离", fontSize = 11.sp, color = Palette.TextFaint)
     }
 }
 
@@ -193,9 +288,7 @@ private fun SideCard(card: CardContent, modifier: Modifier, onClick: () -> Unit)
 /** Small glowing connector dot between cards (stand-in for the SVG link lines). */
 @Composable
 private fun Connector() {
-    Box(
-        modifier = Modifier.size(8.dp).clip(CircleShape).background(Palette.Accent)
-    )
+    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Palette.Accent))
 }
 
 /* ----------------------------- 关注点画布 ----------------------------- */
@@ -262,7 +355,7 @@ private fun Toolbar() {
 }
 
 @Composable
-private fun StatusChip() {
+private fun StatusChip(count: Int) {
     Row(
         modifier =
             Modifier.clip(RoundedCornerShape(20.dp))
@@ -272,6 +365,6 @@ private fun StatusChip() {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Palette.Online))
-        Text(text = "多人协作中 · 3 人在场", fontSize = 13.sp, color = Palette.TextDark)
+        Text(text = "多人协作中 · $count 人在场", fontSize = 13.sp, color = Palette.TextDark)
     }
 }

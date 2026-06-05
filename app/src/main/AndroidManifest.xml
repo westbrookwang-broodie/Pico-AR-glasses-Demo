@@ -30,7 +30,7 @@
         android:theme="@style/Theme.SpatialApp">
 
         <activity
-            android:name=".platform.LaunchActivity"
+            android:name="com.example.spatialnav.platform.LaunchActivity"
             android:exported="true"
             android:theme="@style/Theme.SpatialApp">
             <intent-filter>
