@@ -40,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,12 +54,7 @@ import com.pico.spatial.ui.platform.Material
 data class Member(val name: String, val role: String)
 
 private val ALL_MEMBERS =
-    listOf(
-        Member("林", "产品"),
-        Member("K", "研究"),
-        Member("周", "交互"),
-        Member("陈", "观察")
-    )
+    listOf(Member("林", "产品"), Member("K", "研究"), Member("周", "交互"), Member("陈", "观察"))
 
 /**
  * Main spatial workspace, mirroring the demo HTML "抬头共振" stage:
@@ -68,13 +65,20 @@ private val ALL_MEMBERS =
  * - bottom tool bar + collaboration status
  *
  * Presence state is hoisted here so the header, chip and bottom status all reflect the live count.
+ * [knowledgeBlackHoleSourceState] is an explicit current-viewer contract for upstream OCR/spatial
+ * availability. Neither member K nor navigation Card A determines those signals.
  */
 @Composable
-fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
+fun WorkspaceScreen(
+    onOpenCard: (String) -> Unit,
+    knowledgeBlackHoleSourceState: KnowledgeBlackHoleSourceState,
+    spatialConnectionSession: SpatialConnectionSession
+) {
     // Live presence: who is currently in the session, and whether the member list is expanded.
     val present = remember { mutableStateListOf("林", "K", "周") }
     var presenceExpanded by remember { mutableStateOf(false) }
     val count = present.size
+    var spatialAnchors by remember { mutableStateOf(SpatialConnectionAnchors()) }
 
     val togglePerson: (String) -> Unit = { name ->
         if (present.contains(name)) {
@@ -84,7 +88,14 @@ fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier =
+            Modifier.fillMaxSize().onGloballyPositioned {
+                if (spatialConnectionSession.available) {
+                    spatialAnchors = spatialAnchors.copy(workspace = it.boundsInRoot())
+                }
+            }
+    ) {
         Column(modifier = Modifier.fillMaxSize().padding(28.dp)) {
             HeaderRow(
                 count = count,
@@ -97,21 +108,54 @@ fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                SideCard(SceneData.cardB, Modifier.weight(1f)) { onOpenCard("B") }
+                SideCard(
+                    SceneData.cardB,
+                    Modifier.weight(1f).onGloballyPositioned {
+                        if (spatialConnectionSession.available) {
+                            spatialAnchors = spatialAnchors.copy(b = it.boundsInRoot())
+                        }
+                    }
+                ) {
+                    onOpenCard("B")
+                }
                 Connector()
-                MainCard(SceneData.cardA, Modifier.weight(1.3f)) { onOpenCard("A") }
+                MainCard(
+                    SceneData.cardA,
+                    Modifier.weight(1.3f).onGloballyPositioned {
+                        if (spatialConnectionSession.available) {
+                            spatialAnchors = spatialAnchors.copy(a = it.boundsInRoot())
+                        }
+                    }
+                ) {
+                    onOpenCard("A")
+                }
                 Connector()
-                SideCard(SceneData.cardC, Modifier.weight(1f)) { onOpenCard("C") }
+                SideCard(
+                    SceneData.cardC,
+                    Modifier.weight(1f).onGloballyPositioned {
+                        if (spatialConnectionSession.available) {
+                            spatialAnchors = spatialAnchors.copy(c = it.boundsInRoot())
+                        }
+                    }
+                ) {
+                    onOpenCard("C")
+                }
             }
             Spacer(Modifier.height(20.dp))
             FocusBoard()
             Spacer(Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Toolbar()
                 Spacer(Modifier.weight(1f))
                 StatusChip(count)
             }
         }
+
+        // Drawing and local dwell only; the full-window layer never intercepts navigation.
+        SpatialConnectionOverlay(spatialConnectionSession, spatialAnchors)
 
         // Presence popover floats over the stage, anchored under the top-right chip.
         if (presenceExpanded) {
@@ -121,6 +165,18 @@ fun WorkspaceScreen(onOpenCard: (String) -> Unit) {
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 84.dp, end = 28.dp)
             )
         }
+
+        // Workspace owns placement at the edge/center of DefaultWindowContainer's 2D root window.
+        // These are not world coordinates or anchors on a real paper material.
+        KnowledgeBlackHoleOverlay(
+            sourceState = knowledgeBlackHoleSourceState,
+            promptRegionModifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
+            knowledgeCardModifier = Modifier.align(Alignment.Center)
+        )
+        SpatialResearcherPanel(
+            session = spatialConnectionSession,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp)
+        )
     }
 }
 
@@ -182,7 +238,12 @@ private fun PresencePopover(
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Text(text = "在场成员", fontSize = 13.sp, fontWeight = FontWeight.W700, color = Palette.TextGray)
+        Text(
+            text = "在场成员",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.W700,
+            color = Palette.TextGray
+        )
         ALL_MEMBERS.forEach { member ->
             val on = present.contains(member.name)
             PersonRow(member = member, on = on) { onToggle(member.name) }
@@ -315,7 +376,9 @@ private fun FocusBoard() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StickyNote("共识点", Palette.NoteBlue, selected == "common") { selected = "common" }
-                StickyNote("疑问点", Palette.NotePink, selected == "question") { selected = "question" }
+                StickyNote("疑问点", Palette.NotePink, selected == "question") {
+                    selected = "question"
+                }
                 StickyNote("新观点", Palette.NoteGreen, selected == "new") { selected = "new" }
             }
         }

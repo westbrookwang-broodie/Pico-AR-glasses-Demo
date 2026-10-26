@@ -22,8 +22,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.spatialnav.ui.scene.CardADetailScreen
 import com.example.spatialnav.ui.scene.CardBDetailScreen
 import com.example.spatialnav.ui.scene.CardCDetailScreen
+import com.example.spatialnav.ui.scene.KnowledgeBlackHoleRuntimeSource
+import com.example.spatialnav.ui.scene.KnowledgeBlackHoleSourceState
 import com.example.spatialnav.ui.scene.Routes
+import com.example.spatialnav.ui.scene.SpatialConnectionRuntimeSource
 import com.example.spatialnav.ui.scene.WorkspaceScreen
+import com.example.spatialnav.ui.scene.rememberSpatialConnectionSession
 import com.pico.spatial.ui.design.PicoTheme
 import com.pico.spatial.ui.foundation.dsl.DefaultWindowContainer
 import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
@@ -42,6 +46,25 @@ fun mainApp(scope: SpatialAppScope) =
             PicoTheme {
                 Box {
                     val navController = rememberNavController()
+                    val spatialSession =
+                        rememberSpatialConnectionSession(SpatialConnectionRuntimeSource.state)
+                    // Completion unlocks distance simulation, but only a confirmed connection sets
+                    // P.
+                    // Sticky for this round: departing does not re-enable feature one; Reset does.
+                    val rawKnowledgeSource = KnowledgeBlackHoleRuntimeSource.state
+                    val knowledgeSource =
+                        when (rawKnowledgeSource) {
+                            KnowledgeBlackHoleSourceState.Unavailable -> rawKnowledgeSource
+                            is KnowledgeBlackHoleSourceState.Ready ->
+                                rawKnowledgeSource.copy(
+                                    input =
+                                        rawKnowledgeSource.input.copy(
+                                            pUpgraded =
+                                                rawKnowledgeSource.input.pUpgraded ||
+                                                    spatialSession.state.spatialStageEntered
+                                        )
+                                )
+                        }
                     NavHost(navController = navController, startDestination = Routes.WORKSPACE) {
                         composable(Routes.WORKSPACE) {
                             WorkspaceScreen(
@@ -51,7 +74,9 @@ fun mainApp(scope: SpatialAppScope) =
                                         "C" -> navController.navigate(Routes.CARD_C)
                                         else -> navController.navigate(Routes.CARD_A)
                                     }
-                                }
+                                },
+                                knowledgeBlackHoleSourceState = knowledgeSource,
+                                spatialConnectionSession = spatialSession
                             )
                         }
                         composable(Routes.CARD_A) {
