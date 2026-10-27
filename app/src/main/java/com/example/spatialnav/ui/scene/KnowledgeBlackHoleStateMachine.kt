@@ -137,7 +137,8 @@ data class KnowledgeBlackHoleState(
     val dwellElapsedMillis: Long = 0L,
     val knowledgeRegionEntered: Boolean = false,
     val knowledgeHovered: Boolean = false,
-    val knowledgeExitStartedAtMillis: Long? = null
+    val knowledgeExitStartedAtMillis: Long? = null,
+    val lastNowMillis: Long = 0L
 ) {
     val dwellProgress: Float
         get() =
@@ -148,13 +149,15 @@ data class KnowledgeBlackHoleState(
 }
 
 /**
- * Times are monotonic milliseconds supplied by the caller; the reducer has no clock or UI effects.
+ * Hover and tick times use SystemClock.uptimeMillis; the reducer has no clock or UI effects.
+ * Input changes are untimed and must take effect immediately, without resetting the time watermark.
  */
 sealed interface KnowledgeBlackHoleEvent {
     data class InputChanged(val input: KnowledgeBlackHoleInput) : KnowledgeBlackHoleEvent
 
     /** The union of Point, the connecting space, the prompt and its entry. */
-    data class PromptRegionHoverChanged(val hovered: Boolean) : KnowledgeBlackHoleEvent
+    data class PromptRegionHoverChanged(val hovered: Boolean, val nowMillis: Long) :
+        KnowledgeBlackHoleEvent
 
     data class EntryHoverChanged(val hovered: Boolean, val nowMillis: Long) :
         KnowledgeBlackHoleEvent
@@ -188,21 +191,37 @@ object KnowledgeBlackHoleStateMachine {
                     input.kPairValid != state.input.kPairValid ||
                     input.pUpgraded != state.input.pUpgraded
             ) {
-                initial(input)
+                initial(input).copy(lastNowMillis = state.lastNowMillis)
             } else {
                 // Brightness updates must not interrupt an otherwise valid interaction.
                 state.copy(input = input)
             }
         }
-        if (!state.input.isEligible) return initial(state.input)
+        val nowMillis =
+            when (event) {
+                is KnowledgeBlackHoleEvent.PromptRegionHoverChanged -> event.nowMillis
+                is KnowledgeBlackHoleEvent.EntryHoverChanged -> event.nowMillis
+                is KnowledgeBlackHoleEvent.KnowledgeHoverChanged -> event.nowMillis
+                is KnowledgeBlackHoleEvent.Tick -> event.nowMillis
+                is KnowledgeBlackHoleEvent.InputChanged -> return state
+            }
+        // All timed events share one watermark, including events ignored by the current stage.
+        // Equal times retain call order; stale events must not change hover flags or timers.
+        if (nowMillis < state.lastNowMillis) return state
 
-        return when (event) {
-            is KnowledgeBlackHoleEvent.PromptRegionHoverChanged -> promptHover(state, event.hovered)
-            is KnowledgeBlackHoleEvent.EntryHoverChanged -> entryHover(state, event)
-            is KnowledgeBlackHoleEvent.KnowledgeHoverChanged -> knowledgeHover(state, event)
-            is KnowledgeBlackHoleEvent.Tick -> tick(state, event.nowMillis)
-            is KnowledgeBlackHoleEvent.InputChanged -> state
-        }
+        val nextState =
+            if (!state.input.isEligible) initial(state.input)
+            else
+                when (event) {
+                    is KnowledgeBlackHoleEvent.PromptRegionHoverChanged ->
+                        promptHover(state, event.hovered)
+                    is KnowledgeBlackHoleEvent.EntryHoverChanged -> entryHover(state, event)
+                    is KnowledgeBlackHoleEvent.KnowledgeHoverChanged -> knowledgeHover(state, event)
+                    is KnowledgeBlackHoleEvent.Tick -> tick(state, nowMillis)
+                    is KnowledgeBlackHoleEvent.InputChanged -> state
+                }
+        // Stage completion and resets clear interaction data, never the processed time watermark.
+        return nextState.copy(lastNowMillis = nowMillis)
     }
 
     private fun promptHover(

@@ -79,7 +79,7 @@ class KnowledgeBlackHoleStateMachineTest {
                 assertNull(KnowledgeAssociations.forMaterial(id))
                 var state = KnowledgeBlackHoleStateMachine.initial(input.copy(currentMaterial = id))
                 assertEquals(KnowledgeBlackHoleStage.HIDDEN, state.stage)
-                state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true))
+                state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 0L))
                 state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 0L))
                 state = reduce(state, KnowledgeBlackHoleEvent.Tick(5000L))
                 assertEquals(KnowledgeBlackHoleStage.HIDDEN, state.stage)
@@ -112,7 +112,7 @@ class KnowledgeBlackHoleStateMachineTest {
             .forEach { id ->
                 var state = KnowledgeBlackHoleStateMachine.initial(input.copy(currentMaterial = id))
                 assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
-                state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true))
+                state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 0L))
                 assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
                 state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 100L))
                 assertEquals(KnowledgeBlackHoleStage.DWELL, state.stage)
@@ -121,6 +121,7 @@ class KnowledgeBlackHoleStateMachineTest {
                 assertEquals(0.5f, state.dwellProgress, 0f)
                 state = reduce(state, KnowledgeBlackHoleEvent.Tick(1599L))
                 assertEquals(KnowledgeBlackHoleStage.DWELL, state.stage)
+                assertEquals(1499L, state.dwellElapsedMillis)
                 state = reduce(state, KnowledgeBlackHoleEvent.Tick(1600L))
                 assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
                 assertEquals(id, state.input.currentMaterial)
@@ -160,12 +161,12 @@ class KnowledgeBlackHoleStateMachineTest {
     @Test
     fun promptUnionKeepsPromptWhileMovingFromPointToEntryButClosesOnRealExit() {
         var state = prompt()
-        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true))
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 0L))
         state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 0L))
         assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
         state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 100L))
         state = reduce(state, KnowledgeBlackHoleEvent.Tick(500L))
-        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false))
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 500L))
         assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
         assertCleared(state)
         state = reduce(state, KnowledgeBlackHoleEvent.Tick(3000L))
@@ -178,27 +179,31 @@ class KnowledgeBlackHoleStateMachineTest {
         var state = reduce(point, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 0L))
         state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 0L))
         state = reduce(state, KnowledgeBlackHoleEvent.Tick(10_000L))
-        assertEquals(point, state)
+        assertEquals(point.copy(lastNowMillis = 10_000L), state)
 
-        val prompt = reduce(point, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true))
-        state = reduce(prompt, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 100L))
-        state = reduce(state, KnowledgeBlackHoleEvent.Tick(10_000L))
-        assertEquals(prompt, state)
+        val prompt =
+            reduce(
+                KnowledgeBlackHoleStateMachine.initial(input),
+                KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 10_000L)
+            )
+        state = reduce(prompt, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 10_100L))
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(20_000L))
+        assertEquals(prompt.copy(lastNowMillis = 20_000L), state)
 
         val knowledge = knowledge()
-        state = reduce(knowledge, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false))
+        state = reduce(knowledge, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 2_000L))
         state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 2_000L))
-        assertEquals(knowledge, state)
+        assertEquals(knowledge.copy(lastNowMillis = 2_000L), state)
     }
 
     @Test
     fun initialFalseHoverDoesNotCollapseNewPromptOrKnowledgeCard() {
         var state = KnowledgeBlackHoleStateMachine.initial(input)
-        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false))
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 0L))
         assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
         // A freshly mounted region has not observed an enter yet.
         state = state.copy(stage = KnowledgeBlackHoleStage.PROMPT)
-        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false))
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 0L))
         assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
         state = knowledge()
         state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 1500L))
@@ -215,6 +220,7 @@ class KnowledgeBlackHoleStateMachineTest {
         state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 2500L))
         state = reduce(state, KnowledgeBlackHoleEvent.Tick(3999L))
         assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+        assertEquals(2500L, state.knowledgeExitStartedAtMillis)
         state = reduce(state, KnowledgeBlackHoleEvent.Tick(4000L))
         assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
         assertCleared(state)
@@ -327,6 +333,222 @@ class KnowledgeBlackHoleStateMachineTest {
     }
 
     @Test
+    fun staleTickCannotRewindDwellProgressOrWatermark() {
+        var state = dwellingAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_200L))
+        val beforeStaleTick = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(1_500L))
+
+        assertEquals(beforeStaleTick, state)
+        assertEquals(1_200L, state.dwellElapsedMillis)
+        assertEquals(2_200L, state.lastNowMillis)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_499L))
+        assertEquals(KnowledgeBlackHoleStage.DWELL, state.stage)
+        assertEquals(1_499L, state.dwellElapsedMillis)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_500L))
+        assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+        assertEquals(2_500L, state.lastNowMillis)
+    }
+
+    @Test
+    fun staleEntryExitCannotCancelNewerDwell() {
+        var state = dwellingAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_200L))
+        val beforeStaleExit = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 2_100L))
+
+        assertEquals(beforeStaleExit, state)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_500L))
+        assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+    }
+
+    @Test
+    fun staleKnowledgeExitAfterReentryCannotStartExitTimer() {
+        var state = knowledgeAt(1_500L)
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 2_000L))
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 2_500L))
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 3_000L))
+        val afterReentry = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 2_700L))
+
+        assertEquals(afterReentry, state)
+        assertTrue(state.knowledgeHovered)
+        assertNull(state.knowledgeExitStartedAtMillis)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(10_000L))
+        assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+    }
+
+    @Test
+    fun stalePromptExitCannotCollapseNewerPromptOrDwellState() {
+        var promptState = promptAt(2_000L)
+        promptState = reduce(promptState, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 2_100L))
+        val beforeStalePromptExit = promptState
+
+        promptState =
+            reduce(
+                promptState,
+                KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 2_050L)
+            )
+
+        assertEquals(beforeStalePromptExit, promptState)
+        assertEquals(KnowledgeBlackHoleStage.PROMPT, promptState.stage)
+
+        var dwellState = reduce(promptState, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 2_200L))
+        dwellState = reduce(dwellState, KnowledgeBlackHoleEvent.Tick(2_800L))
+        val beforeStaleDwellExit = dwellState
+        dwellState =
+            reduce(
+                dwellState,
+                KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 2_700L)
+            )
+
+        assertEquals(beforeStaleDwellExit, dwellState)
+        assertEquals(KnowledgeBlackHoleStage.DWELL, dwellState.stage)
+        assertEquals(600L, dwellState.dwellElapsedMillis)
+    }
+
+    @Test
+    fun watermarkFiltersStaleEventsAcrossAllTimedEventTypes() {
+        var state = KnowledgeBlackHoleStateMachine.initial(input)
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 1_000L))
+        val afterIgnoredKnowledgeHover = state
+        assertEquals(1_000L, state.lastNowMillis)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 999L))
+        assertEquals(afterIgnoredKnowledgeHover, state)
+        assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 1_100L))
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(1_200L))
+        val afterPromptTick = state
+        assertEquals(1_200L, state.lastNowMillis)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 1_199L))
+        assertEquals(afterPromptTick, state)
+        assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 1_300L))
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 1_400L))
+        val afterPromptRefresh = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(1_399L))
+        assertEquals(afterPromptRefresh, state)
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 1_398L))
+        assertEquals(afterPromptRefresh, state)
+    }
+
+    @Test
+    fun equalTimestampEventsAreAppliedInCallOrder() {
+        var state = promptAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 1_000L))
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 1_000L))
+        assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
+        assertFalse(state.entryHovered)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(true, 1_000L))
+        assertEquals(KnowledgeBlackHoleStage.DWELL, state.stage)
+        assertTrue(state.entryHovered)
+        assertEquals(1_000L, state.dwellStartedAtMillis)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(false, 1_000L))
+        assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
+        assertEquals(1_000L, state.lastNowMillis)
+    }
+
+    @Test
+    fun completedStagesKeepWatermarkAndRejectEventsFromPreviousStage() {
+        var state = dwellingAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_500L))
+        assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+        assertEquals(2_500L, state.lastNowMillis)
+        val completedKnowledge = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 2_499L))
+        assertEquals(completedKnowledge, state)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 3_000L))
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 3_500L))
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(5_000L))
+        assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
+        assertEquals(5_000L, state.lastNowMillis)
+        val returnedPoint = state
+
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 4_999L))
+        assertEquals(returnedPoint, state)
+    }
+
+    @Test
+    fun interactionResetPreservesWatermarkAndStaleEventsCannotReviveOldMaterialState() {
+        var state = dwellingAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_200L))
+        val changed = input.copy(currentMaterial = KnowledgeMaterialId.III)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.InputChanged(changed))
+
+        assertEquals(KnowledgeBlackHoleStage.POINT, state.stage)
+        assertEquals(changed, state.input)
+        assertEquals(2_200L, state.lastNowMillis)
+        assertCleared(state)
+        val resetState = state
+
+        listOf(
+                KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 2_100L),
+                KnowledgeBlackHoleEvent.EntryHoverChanged(true, 2_100L),
+                KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 2_100L),
+                KnowledgeBlackHoleEvent.Tick(2_100L)
+            )
+            .forEach { staleEvent ->
+                state = reduce(state, staleEvent)
+                assertEquals(staleEvent.toString(), resetState, state)
+            }
+
+        state = reduce(state, KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, 2_200L))
+        assertEquals(KnowledgeBlackHoleStage.PROMPT, state.stage)
+        assertEquals(changed, state.input)
+    }
+
+    @Test
+    fun eligibilityResetPreservesWatermarkAndStaleEventsCannotReviveInteraction() {
+        var state = knowledgeAt(1_500L)
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(true, 2_000L))
+        val invalid = input.copy(kPairValid = false)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.InputChanged(invalid))
+
+        assertEquals(KnowledgeBlackHoleStage.HIDDEN, state.stage)
+        assertEquals(2_000L, state.lastNowMillis)
+        assertCleared(state)
+        val hidden = state
+        state = reduce(state, KnowledgeBlackHoleEvent.KnowledgeHoverChanged(false, 1_999L))
+        assertEquals(hidden, state)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(1_999L))
+        assertEquals(hidden, state)
+    }
+
+    @Test
+    fun brightnessOnlyInputChangePreservesInteractionAndWatermark() {
+        var state = dwellingAt(1_000L)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_200L))
+        val changed = input.copy(distanceBrightnessMultiplier = 0.4f)
+
+        state = reduce(state, KnowledgeBlackHoleEvent.InputChanged(changed))
+
+        assertEquals(KnowledgeBlackHoleStage.DWELL, state.stage)
+        assertEquals(1_000L, state.dwellStartedAtMillis)
+        assertEquals(1_200L, state.dwellElapsedMillis)
+        assertEquals(2_200L, state.lastNowMillis)
+        val afterBrightnessChange = state
+        state = reduce(state, KnowledgeBlackHoleEvent.EntryHoverChanged(false, 2_199L))
+        assertEquals(afterBrightnessChange, state)
+        state = reduce(state, KnowledgeBlackHoleEvent.Tick(2_500L))
+        assertEquals(KnowledgeBlackHoleStage.KNOWLEDGE, state.stage)
+        assertEquals(changed, state.input)
+    }
+
+    @Test
     fun brightnessUpdatesPreserveDwellAndKnowledgeExitTimers() {
         val changed = input.copy(distanceBrightnessMultiplier = 0.4f)
         var state = reduce(dwelling(), KnowledgeBlackHoleEvent.Tick(750L))
@@ -352,17 +574,26 @@ class KnowledgeBlackHoleStateMachineTest {
             is KnowledgeBlackHoleSourceState.Ready -> sourceState.input
         }
 
-    private fun prompt(): KnowledgeBlackHoleState =
+    private fun prompt(): KnowledgeBlackHoleState = promptAt(0L)
+
+    private fun promptAt(nowMillis: Long): KnowledgeBlackHoleState =
         reduce(
             KnowledgeBlackHoleStateMachine.initial(input),
-            KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true)
+            KnowledgeBlackHoleEvent.PromptRegionHoverChanged(true, nowMillis)
         )
 
-    private fun dwelling(): KnowledgeBlackHoleState =
-        reduce(prompt(), KnowledgeBlackHoleEvent.EntryHoverChanged(true, 0L))
+    private fun dwelling(): KnowledgeBlackHoleState = dwellingAt(0L)
 
-    private fun knowledge(): KnowledgeBlackHoleState =
-        reduce(dwelling(), KnowledgeBlackHoleEvent.Tick(1500L))
+    private fun dwellingAt(nowMillis: Long): KnowledgeBlackHoleState =
+        reduce(promptAt(nowMillis), KnowledgeBlackHoleEvent.EntryHoverChanged(true, nowMillis))
+
+    private fun knowledge(): KnowledgeBlackHoleState = knowledgeAt(1500L)
+
+    private fun knowledgeAt(completedAtMillis: Long): KnowledgeBlackHoleState =
+        reduce(
+            dwellingAt(completedAtMillis - KnowledgeBlackHoleStateMachine.DWELL_MILLIS),
+            KnowledgeBlackHoleEvent.Tick(completedAtMillis)
+        )
 
     private fun reduce(
         state: KnowledgeBlackHoleState,

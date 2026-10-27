@@ -309,6 +309,13 @@ class SpatialConnectionStateMachineTest {
         harness.send(SpatialConnectionEvent.PointHoverChanged(true, 24_002L))
         assertEquals(SpatialConnectionStage.POINT_DWELL, harness.state.stage)
         assertEquals(24_002L, harness.state.dwellStartedAtMillis)
+
+        harness.send(SpatialConnectionEvent.Tick(24_801L))
+        assertEquals(SpatialConnectionStage.POINT_DWELL, harness.state.stage)
+        harness.send(SpatialConnectionEvent.Tick(24_802L))
+        assertEquals(SpatialConnectionStage.INVITE_VISIBLE, harness.state.stage)
+        assertEquals(2, harness.records.count { it.type == SpatialRecordType.INVITE_SHOWN })
+        assertEquals(1, harness.records.count { it.type == SpatialRecordType.INVITE_TIMED_OUT })
     }
 
     @Test

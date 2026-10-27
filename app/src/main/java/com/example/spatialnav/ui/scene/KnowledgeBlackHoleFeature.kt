@@ -171,8 +171,11 @@ private fun KnowledgePromptRegion(
 
     LaunchedEffect(regionHovered, entryHovered) {
         // Child hover also proves the union was entered, independent of event delivery order.
-        onEvent(KnowledgeBlackHoleEvent.PromptRegionHoverChanged(regionHovered || entryHovered))
-        onEvent(KnowledgeBlackHoleEvent.EntryHoverChanged(entryHovered, SystemClock.uptimeMillis()))
+        val nowMillis = SystemClock.uptimeMillis()
+        onEvent(
+            KnowledgeBlackHoleEvent.PromptRegionHoverChanged(regionHovered || entryHovered, nowMillis)
+        )
+        onEvent(KnowledgeBlackHoleEvent.EntryHoverChanged(entryHovered, nowMillis))
     }
 
     Row(
